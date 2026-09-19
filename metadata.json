@@ -1,0 +1,6 @@
+{
+  "name": "Team Task & SOP Tracker",
+  "description": "Internal operational dashboard for tracking recurring team tasks, managing standard operating procedures (SOPs), and auditing completion histories.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
