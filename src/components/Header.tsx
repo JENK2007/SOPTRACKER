@@ -7,6 +7,7 @@ import {
   PlusCircle, 
   RotateCcw,
   Search,
+  Settings,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,6 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   const isDashboard = currentRoute.name === 'dashboard';
   const isTasks = currentRoute.name === 'tasks';
   const isNew = currentRoute.name === 'task-new';
+  const isSettings = currentRoute.name === 'settings';
 
   return (
     <header id="app-header" className="sticky top-0 z-30 bg-stone-900/95 backdrop-blur-md text-stone-100 border-b border-stone-800 shadow-md">
@@ -145,6 +147,20 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <PlusCircle className="w-3.5 h-3.5" />
                 <span>Add Task</span>
+              </button>
+
+              <button
+                id="nav-settings-btn"
+                onClick={() => onRouteChange({ name: 'settings' })}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[38px] ${
+                  isSettings
+                    ? 'bg-stone-800 text-emerald-400 border border-stone-700 shadow-xs'
+                    : 'text-stone-300 hover:text-stone-100 hover:bg-stone-800/60'
+                }`}
+                title="Connect Email (Gmail/Outlook) and Microsoft Teams"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Email &amp; Teams</span>
               </button>
             </nav>
 

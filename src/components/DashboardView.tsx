@@ -19,7 +19,8 @@ import {
   Layers,
   ChevronRight,
   TrendingUp,
-  Activity
+  Activity,
+  Settings
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -81,18 +82,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Operational SOP Command Center
+            Global Work Command Center
           </div>
           <h1 className="text-xl sm:text-2xl font-semibold text-stone-100 tracking-tight">
-            Team Operational Status
+            Team Work Status
           </h1>
           <p className="text-xs sm:text-sm text-stone-400 mt-1 max-w-2xl">
-            Track daily, weekly, and monthly operational standard procedures, maintain execution rigor, and audit team handoffs.
+            Track daily, weekly, and monthly tasks, maintain execution rigor, and audit team handoffs.
           </p>
         </div>
 
         {/* Quick actions buttons */}
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full md:w-auto shrink-0 pt-1 md:pt-0">
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            id="dash-setup-integrations-btn"
+            onClick={() => onRouteChange({ name: 'settings' })}
+            className="flex-1 sm:flex-initial px-3.5 py-2.5 sm:py-2 text-xs font-semibold bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs min-h-[42px] sm:min-h-[38px]"
+          >
+            <Settings className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Email &amp; Teams Setup</span>
+          </motion.button>
           <motion.button
             whileTap={{ scale: 0.96 }}
             id="dash-view-all-tasks-btn"
@@ -140,7 +150,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-xs text-amber-400 font-medium">tasks require run</span>
           </div>
           <p className="text-[11px] text-stone-400 mt-2 flex items-center gap-1 group-hover:text-stone-300">
-            <span>Filter pending routines</span>
+            <span>Filter pending tasks</span>
             <ChevronRight className="w-3 h-3 text-stone-500 group-hover:translate-x-0.5 transition-transform" />
           </p>
         </motion.div>
@@ -165,7 +175,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-2xl sm:text-3xl font-bold text-emerald-400 tracking-tight">
               {completedTasks.length}
             </span>
-            <span className="text-xs text-stone-400 font-medium">of {totalTasks} routines</span>
+            <span className="text-xs text-stone-400 font-medium">of {totalTasks} tasks</span>
           </div>
           <p className="text-[11px] text-stone-400 mt-2 flex items-center gap-1 group-hover:text-stone-300">
             <span>View completed checklist</span>
@@ -184,7 +194,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           className="bg-stone-900 border border-stone-800 hover:border-stone-700 rounded-xl p-5 transition-colors cursor-pointer group shadow-xs"
         >
           <div className="flex items-center justify-between text-stone-400 mb-3">
-            <span className="text-xs font-medium text-stone-400">Active SOP Documents</span>
+            <span className="text-xs font-medium text-stone-400">Active Tasks & Projects</span>
             <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 group-hover:scale-105 transition-transform">
               <BookOpen className="w-4 h-4" />
             </div>
@@ -193,7 +203,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-2xl sm:text-3xl font-bold text-stone-100 tracking-tight">
               {totalTasks}
             </span>
-            <span className="text-xs text-stone-400 font-medium">standard procedures</span>
+            <span className="text-xs text-stone-400 font-medium">active tasks</span>
           </div>
           <p className="text-[11px] text-stone-400 mt-2 flex items-center gap-1 group-hover:text-stone-300">
             <span>Explore repository</span>
@@ -261,7 +271,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-sm font-medium text-stone-200">All routines are up to date!</h3>
+              <h3 className="text-sm font-medium text-stone-200">All tasks are up to date!</h3>
               <p className="text-xs text-stone-400 mt-1 max-w-sm mx-auto">
                 No tasks are currently pending for their designated cycle. Good work keeping operations tight.
               </p>
@@ -269,7 +279,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 onClick={() => onRouteChange({ name: 'tasks' })}
                 className="mt-4 px-3 py-1.5 text-xs font-medium bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg transition-colors inline-flex items-center gap-1.5"
               >
-                <span>Browse All SOPs</span>
+                <span>Browse All Tasks</span>
               </button>
             </div>
           ) : (
@@ -296,7 +306,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           {task.category}
                         </span>
                         <span className="text-[11px] text-stone-500">
-                          {task.steps.length} SOP steps
+                          {task.steps.length} Steps
                         </span>
                       </div>
 
@@ -331,7 +341,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         className="flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 text-xs font-medium text-stone-300 hover:text-stone-100 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px] sm:min-h-[36px]"
                       >
                         <BookOpen className="w-3.5 h-3.5 text-stone-400" />
-                        <span>View SOP</span>
+                        <span>View Task</span>
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.95 }}
@@ -392,7 +402,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div className="mt-5 pt-4 border-t border-stone-800/80 flex items-center justify-between">
               <span className="text-[11px] text-stone-400">Total operational tasks</span>
-              <span className="text-xs font-bold text-stone-200">{totalTasks} SOPs</span>
+              <span className="text-xs font-bold text-stone-200">{totalTasks} Tasks</span>
             </div>
           </div>
 

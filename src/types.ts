@@ -22,6 +22,8 @@ export interface Task {
   frequency: TaskFrequency;
   owner: string;
   ownerRole?: string;
+  assignedBy?: string;
+  assignedByRole?: string;
   category: string;
   estDurationMinutes?: number;
   steps: string[];
@@ -32,8 +34,16 @@ export interface Task {
   archived?: boolean;
 }
 
+export interface NotificationSettings {
+  emailProvider?: 'gmail' | 'outlook' | 'custom';
+  emailUser: string;
+  emailPass: string;
+  teamsWebhookUrl: string;
+}
+
 export type ViewRoute = 
   | { name: 'dashboard' }
   | { name: 'tasks'; filterStatus?: 'all' | 'pending' | 'done'; filterFrequency?: string; filterCategory?: string }
   | { name: 'task-detail'; taskId: string }
-  | { name: 'task-new' };
+  | { name: 'task-new' }
+  | { name: 'settings' };

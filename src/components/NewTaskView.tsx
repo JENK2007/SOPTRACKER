@@ -27,6 +27,8 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
   const [frequency, setFrequency] = useState<TaskFrequency>('Weekly');
   const [owner, setOwner] = useState('');
   const [ownerRole, setOwnerRole] = useState('');
+  const [assignedBy, setAssignedBy] = useState('');
+  const [assignedByRole, setAssignedByRole] = useState('Senior Leadership');
   const [category, setCategory] = useState('Operations');
   const [estDurationMinutes, setEstDurationMinutes] = useState<number>(30);
   
@@ -81,9 +83,11 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
       frequency,
       owner: owner.trim(),
       ownerRole: ownerRole.trim() || undefined,
+      assignedBy: assignedBy.trim() || undefined,
+      assignedByRole: assignedByRole.trim() || undefined,
       category: category.trim() || 'Operations',
       estDurationMinutes: estDurationMinutes || undefined,
-      steps: parsedSteps.length > 0 ? parsedSteps : ['Execute standard operational task.'],
+      steps: parsedSteps.length > 0 ? parsedSteps : ['Execute standard task.'],
       links: validLinks,
       lastCompletedAt: null,
     });
@@ -102,7 +106,7 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
           <span>Back to Tasks</span>
         </button>
         <span>/</span>
-        <span className="text-stone-300 font-medium">New Operational SOP</span>
+        <span className="text-stone-300 font-medium">New Task</span>
       </div>
 
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 sm:p-8 shadow-xs space-y-5 sm:space-y-6">
@@ -110,10 +114,10 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
         {/* Header */}
         <div className="border-b border-stone-800 pb-5">
           <h1 className="text-xl sm:text-2xl font-bold text-stone-100 tracking-tight">
-            Create Operational Task &amp; SOP
+            Create Task
           </h1>
           <p className="text-xs sm:text-sm text-stone-400 mt-1">
-            Standardize a recurring operational procedure with clear owner, cadence, and step-by-step instructions.
+            Standardize a recurring task with clear owner, cadence, and step-by-step instructions.
           </p>
         </div>
 
@@ -122,7 +126,7 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
           {/* Title */}
           <div>
             <label className="block text-xs font-semibold text-stone-200 mb-1.5 flex items-center gap-1.5">
-              <span>Task / SOP Title</span>
+              <span>Task Title</span>
               <span className="text-rose-400">*</span>
             </label>
             <input
@@ -215,6 +219,39 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
               />
             </div>
 
+            {/* Assigned By Name */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-200 mb-1.5 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-stone-400" />
+                <span>Assigned By (Name)</span>
+              </label>
+              <input
+                id="new-task-assignedby-input"
+                type="text"
+                placeholder="e.g. Jane Doe"
+                value={assignedBy}
+                onChange={(e) => setAssignedBy(e.target.value)}
+                className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+
+            {/* Assigned By Role */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-200 mb-1.5 flex items-center gap-1.5">
+                <span>Assigned By Role</span>
+              </label>
+              <select
+                id="new-task-assignedbyrole-select"
+                value={assignedByRole}
+                onChange={(e) => setAssignedByRole(e.target.value)}
+                className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2.5 text-xs text-stone-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="Senior Leadership">Senior Leadership</option>
+                <option value="Manager">Manager</option>
+                <option value="Peer">Peer</option>
+              </select>
+            </div>
+
           </div>
 
           {/* SOP Steps */}
@@ -222,7 +259,7 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-semibold text-stone-200 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-stone-400" />
-                <span>SOP Steps (One step per line)</span>
+                <span>Steps (One step per line)</span>
                 <span className="text-rose-400">*</span>
               </label>
               <span className="text-[11px] text-stone-400">
@@ -311,7 +348,7 @@ export const NewTaskView: React.FC<NewTaskViewProps> = ({
               className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm shadow-emerald-950/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
             >
               <Check className="w-4 h-4" />
-              <span>Save &amp; Publish SOP</span>
+              <span>Create Task</span>
             </button>
           </div>
 

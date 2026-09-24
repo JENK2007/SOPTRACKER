@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Task, ViewRoute } from './types';
+import { Task, ViewRoute, NotificationSettings } from './types';
 import { 
   loadTasks, 
   saveTasks, 
@@ -15,12 +15,40 @@ import { TaskDetailView } from './components/TaskDetailView';
 import { NewTaskView } from './components/NewTaskView';
 import { MarkDoneModal } from './components/MarkDoneModal';
 import { EditTaskModal } from './components/EditTaskModal';
-import { CheckCircle2, AlertTriangle, X, LayoutDashboard, ListTodo, PlusCircle } from 'lucide-react';
+import { SettingsView } from './components/SettingsView';
+import { CheckCircle2, AlertTriangle, X, LayoutDashboard, ListTodo, PlusCircle, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+const loadNotificationSettings = (): NotificationSettings => {
+  try {
+    const stored = localStorage.getItem('notificationSettings');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        emailProvider: parsed.emailProvider || 'gmail',
+        emailUser: parsed.emailUser || '',
+        emailPass: parsed.emailPass || '',
+        teamsWebhookUrl: parsed.teamsWebhookUrl || '',
+      };
+    }
+  } catch {}
+  return { emailProvider: 'gmail', emailUser: '', emailPass: '', teamsWebhookUrl: '' };
+};
+
+const saveNotificationSettings = (settings: NotificationSettings) => {
+  localStorage.setItem('notificationSettings', JSON.stringify(settings));
+};
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
   const [searchQuery, setSearchQuery] = useState('');
+  const [notifSettings, setNotifSettings] = useState<NotificationSettings>(loadNotificationSettings);
+
+  const handleSaveSettings = (settings: NotificationSettings) => {
+    setNotifSettings(settings);
+    saveNotificationSettings(settings);
+    showToast('Notification settings saved!');
+  };
   
   // Modal states
   const [selectedTaskForDone, setSelectedTaskForDone] = useState<Task | null>(null);
@@ -43,6 +71,9 @@ export default function App() {
       const hash = window.location.hash.replace(/^#/, '');
       const activePath = hash || path;
 
+      if (activePath === '/settings') {
+        return { name: 'settings' };
+      }
       if (activePath === '/tasks/new' || activePath.startsWith('/tasks/new')) {
         return { name: 'task-new' };
       }
@@ -73,6 +104,8 @@ export default function App() {
       targetUrl = '/tasks/new';
     } else if (newRoute.name === 'task-detail') {
       targetUrl = `/tasks/${newRoute.taskId}`;
+    } else if (newRoute.name === 'settings') {
+      targetUrl = '/settings';
     }
 
     try {
@@ -101,11 +134,48 @@ export default function App() {
   }, []);
 
   // Handlers for Tasks
-  const handleConfirmMarkDone = (taskId: string, completedBy: string, notes?: string) => {
+  const handleConfirmMarkDone = async (taskId: string, completedBy: string, notes?: string) => {
     const { updatedTasks, updatedTask } = markTaskAsDone(tasks, taskId, completedBy, notes);
     setTasks(updatedTasks);
     if (updatedTask) {
-      showToast(`Logged completion for "${updatedTask.title}"!`);
+      if (updatedTask.assignedByRole === 'Senior Leadership' || updatedTask.assignedByRole === 'Manager') {
+        const message = `Task "${updatedTask.title}" has been completed by ${completedBy}.\nNotes: ${notes || 'None'}`;
+        
+        try {
+          await fetch('/api/notify/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: notifSettings.emailUser,
+              subject: `Task Completed: ${updatedTask.title}`,
+              message: message,
+              provider: notifSettings.emailProvider || 'gmail',
+              credentials: { 
+                emailUser: notifSettings.emailUser, 
+                emailPass: notifSettings.emailPass,
+                emailProvider: notifSettings.emailProvider || 'gmail',
+              },
+            })
+          });
+
+          await fetch('/api/notify/teams', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: `Task Completed: ${updatedTask.title}`,
+              text: message,
+              webhookUrl: notifSettings.teamsWebhookUrl,
+            })
+          });
+
+          showToast(`Logged completion and notified ${updatedTask.assignedByRole} (${updatedTask.assignedBy || 'Manager'})!`);
+        } catch (err) {
+          console.error(err);
+          showToast(`Logged completion, but failed to send notifications.`, 'info');
+        }
+      } else {
+        showToast(`Logged completion for "${updatedTask.title}"!`);
+      }
     }
   };
 
@@ -115,7 +185,7 @@ export default function App() {
     showToast('Task status reset to pending.', 'info');
   };
 
-  const handleAddTask = (newTaskData: Omit<Task, 'id' | 'createdAt' | 'history'>) => {
+  const handleAddTask = async (newTaskData: Omit<Task, 'id' | 'createdAt' | 'history'>) => {
     const newTask: Task = {
       ...newTaskData,
       id: 'task-' + Date.now(),
@@ -125,7 +195,46 @@ export default function App() {
     const updatedTasks = [newTask, ...tasks];
     setTasks(updatedTasks);
     saveTasks(updatedTasks);
-    showToast(`Created new SOP: "${newTask.title}"!`);
+    
+    if (newTask.assignedByRole === 'Senior Leadership' || newTask.assignedByRole === 'Manager') {
+      try {
+        const message = `You have been assigned a new task: "${newTask.title}" by ${newTask.assignedByRole} (${newTask.assignedBy || 'Manager'}).`;
+        
+        await fetch('/api/notify/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: notifSettings.emailUser,
+            subject: `New Task Assigned: ${newTask.title}`,
+            message: message,
+            provider: notifSettings.emailProvider || 'gmail',
+            credentials: { 
+              emailUser: notifSettings.emailUser, 
+              emailPass: notifSettings.emailPass,
+              emailProvider: notifSettings.emailProvider || 'gmail',
+            },
+          })
+        });
+
+        await fetch('/api/notify/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `New Task Assigned: ${newTask.title}`,
+            text: message,
+            webhookUrl: notifSettings.teamsWebhookUrl,
+          })
+        });
+
+        showToast(`Created Task "${newTask.title}" & notified owner ${newTask.owner}.`);
+      } catch (err) {
+        console.error(err);
+        showToast(`Created Task, but failed to send notifications.`, 'info');
+      }
+    } else {
+      showToast(`Created new Task: "${newTask.title}"!`);
+    }
+    
     navigateTo({ name: 'task-detail', taskId: newTask.id });
   };
 
@@ -140,7 +249,7 @@ export default function App() {
     const target = tasks.find((t) => t.id === taskId);
     if (!target) return;
 
-    if (window.confirm(`Are you sure you want to delete the SOP "${target.title}"?`)) {
+    if (window.confirm(`Are you sure you want to delete the Task "${target.title}"?`)) {
       const updated = tasks.filter((t) => t.id !== taskId);
       setTasks(updated);
       saveTasks(updated);
@@ -150,10 +259,10 @@ export default function App() {
   };
 
   const handleResetData = () => {
-    if (window.confirm('Reset all tasks and SOPs to the default 8 sample operational procedures?')) {
+    if (window.confirm('Reset all tasks to the default 8 sample tasks?')) {
       const defaultTasks = resetToSampleTasks();
       setTasks(defaultTasks);
-      showToast('Sample operational procedures restored.', 'info');
+      showToast('Sample tasks restored.', 'info');
       navigateTo({ name: 'dashboard' });
     }
   };
@@ -231,9 +340,9 @@ export default function App() {
                   return (
                     <div className="text-center py-16 space-y-4">
                       <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto" />
-                      <h2 className="text-lg font-semibold text-stone-200">Task or SOP not found</h2>
+                      <h2 className="text-lg font-semibold text-stone-200">Task not found</h2>
                       <p className="text-xs text-stone-400 max-w-sm mx-auto">
-                        The requested operational task does not exist or may have been deleted.
+                        The requested task does not exist or may have been deleted.
                       </p>
                       <button
                         onClick={() => navigateTo({ name: 'tasks' })}
@@ -280,12 +389,12 @@ export default function App() {
       <footer className="border-t border-stone-800/80 py-6 text-center text-xs text-stone-400 bg-stone-900/50 mb-16 sm:mb-0">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-stone-300">OpsCore Tracker</span>
+            <span className="font-semibold text-stone-300">Global Work Command Center</span>
             <span>•</span>
-            <span>Internal Operational SOP Framework</span>
+            <span>Task Management Framework</span>
           </div>
           <div className="flex items-center gap-4 text-[11px] text-stone-400">
-            <span>{tasks.length} standard operating procedures</span>
+            <span>{tasks.length} active tasks</span>
             <span>•</span>
             <button
               onClick={handleResetData}
@@ -343,6 +452,18 @@ export default function App() {
         >
           <PlusCircle className="w-5 h-5 mb-0.5" />
           <span className="text-[10px]">Add Task</span>
+        </button>
+
+        <button
+          onClick={() => navigateTo({ name: 'settings' })}
+          className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg min-h-[44px] min-w-[64px] transition-colors cursor-pointer ${
+            currentRoute.name === 'settings'
+              ? 'text-emerald-400 font-semibold'
+              : 'text-stone-400 hover:text-stone-200'
+          }`}
+        >
+          <Settings className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px]">Email &amp; Teams</span>
         </button>
       </nav>
 
